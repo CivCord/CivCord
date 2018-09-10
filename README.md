@@ -1,4 +1,4 @@
-<img width=120 src="https://cdn.discordapp.com/attachments/487390167116546068/488522488347754507/civcord2.png" align=right />
+<img width=120 src="https://i.imgur.com/w4PhBLT.png" align=right />
 
 # CivCord
 
