@@ -1,3 +1,4 @@
+<img width=200 src="https://cdn.discordapp.com/attachments/487390167116546068/488522488347754507/civcord2.png" align=right />
 # CivCord
 
 [CivCraft](https://reddit.com/r/CivCraft) on Discord
