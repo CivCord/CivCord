@@ -9,12 +9,9 @@ class Area(object):
         self.area_id = area_id
         self.params = [Cls(area_id) for Cls in all_area_params]
 
-    def tick(self, n=1):
-        raise NotImplementedError
-
-    def snapshot(self):
-        raise NotImplementedError
-
+    def tick(self):
+        for param in self.params:
+            param.tick()
 
 all_area_params = []
 
@@ -28,8 +25,8 @@ class AreaParam(object):
         self.area_id = area_id
         self.value = self.generate_default()
 
-    def tick(self, n=1):
-        raise NotImplementedError
+    def tick(self):
+        pass  # override for erosion/weather/...
 
 
 @area_param
@@ -38,5 +35,5 @@ class SoilFertility(AreaParam):
     def generate_default():
         return random.random()
 
-    def tick(self, n=1):
+    def tick(self):
         raise NotImplementedError

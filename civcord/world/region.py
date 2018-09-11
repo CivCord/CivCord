@@ -9,9 +9,11 @@ class Region(object):
         self.areas = [Area(AreaId(self.region_id, n)) for n in range(50)]
         self.params = [Cls(region_id) for Cls in all_region_params]
 
-    def tick(self, n=1):
-        for area in self.areas.values():
-            area.tick(n=n)
+    def tick(self):
+        for param in self.params:
+            param.tick()
+        for area in self.areas:
+            area.tick()
 
 
 all_region_params = []
@@ -26,15 +28,15 @@ class RegionParam(object):
         self.region_id = region_id
         self.value = self.generate_default()
 
-    def tick(self, n=1):
-        raise NotImplementedError
+    def tick(self):
+        pass  # override for erosion/weather/...
 
 
 @region_param
 class Height(RegionParam):
     @staticmethod
     def generate_default():
-        return random.random() * (256 - 64) + 64
+        return 1 / (.001 + random.random()) + 99.999
 
-    def tick(self, n=1):
+    def tick(self):
         raise NotImplementedError

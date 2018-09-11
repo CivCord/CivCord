@@ -12,7 +12,8 @@ def create_new():
 class World(object):
     def __init__(self):
         self.regions = {
-            2: Region(2),
+            'destination': Region('destination'),
+            'eden': Region('eden'),
         }
         self.players = {}
 
@@ -21,9 +22,6 @@ class World(object):
             region_id = random.choice(list(self.regions.keys()))
             new_player = Player(player_id, region_id)
             self.players[player_id] = new_player
-            new_player.inventory.append(Item())
-            new_player.inventory.append(Item())
-            new_player.inventory.append(Item())
             print('Created player', new_player)
         return self.players[player_id]
 

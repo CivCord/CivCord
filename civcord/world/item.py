@@ -9,6 +9,10 @@ class Item(object):
     def __str__(self):
         return ', '.join(str(getattr(self, Cls.display_name)) for Cls in all_item_params)
 
+    def tick(self):
+        for Cls in all_item_params:
+            getattr(self, Cls.display_name).tick()
+
 
 all_item_params = []
 
@@ -26,7 +30,7 @@ class ItemParam(object):
     def __str__(self):
         return '{0.display_name}={0.value:.3f}'.format(self)
 
-    def tick(self, n=1):
+    def tick(self):
         pass  # override for decay/maturation/...
 
 

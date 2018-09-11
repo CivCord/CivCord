@@ -107,7 +107,7 @@ async def cmd_reworld(state, message, *args):
 @register_cmd('hi', desc='join game')
 async def cmd_hi(state, message, *args):
     player = state.world.get_or_create_player(message.author.id)
-    await message.channel.send(message.author.name + ' joined the game world')
+    await message.channel.send(message.author.display_name + ' joined the game world')
 
 
 @register_cmd('inventory', desc='show carried items')
@@ -115,9 +115,9 @@ async def cmd_inventory(state, message, *args):
     player = state.world.get_or_create_player(message.author.id)
     items = player.inventory
     if not items:
-        await message.channel.send(message.author.name + ' has no items')
+        await message.channel.send(message.author.display_name + ' has no items')
     else:
-        msg = message.author.name + ' has these items:'
+        msg = message.author.display_name + ' has these items:'
         for i, item in enumerate(items):
             msg += '\n`{}`: {}'.format(i, item)
         await message.channel.send(msg)
@@ -127,7 +127,7 @@ async def cmd_inventory(state, message, *args):
 async def cmd_craft(state, message, *args):
     player = state.world.get_or_create_player(message.author.id)
     await message.channel.send('TODO: implement crafting')
-    await message.add_reaction(emojis.hourglass_flowing_sand)
+    await message.add_reaction(emojis.construction_site)
 
 
 @register_cmd('travel', args='<destination>', desc='travel to destination channel')
@@ -167,8 +167,8 @@ async def cmd_travel(state, message, destination=None, *args):
         await dest_channel.set_permissions(author, read_messages=True, send_messages=True)
         await message.channel.set_permissions(author, overwrite=None)
 
-        await message.channel.send('{} travelled to <#{}>'.format(author.name, dest_channel.id))
-        await dest_channel.send('{} arrived'.format(author.name))
+        await message.channel.send('{} travelled to <#{}>'.format(author.display_name, dest_channel.id))
+        await dest_channel.send('{} arrived'.format(author.display_name))
 
 
 def init_state(client, state):

@@ -4,3 +4,7 @@ class Player(object):
         self.player_id = player_id
         self.region_id = region_id
         self.inventory = []
+
+    def tick(self):
+        for item in inventory:
+            item.tick()
