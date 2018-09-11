@@ -10,11 +10,6 @@ import world
 from utils import Autodict
 
 
-admin_user_id = 125924223385468928  # XXX
-
-
-abiword_strings = [l.split('=', 2)[1].strip('"') for l in open(
-    '/usr/share/abiword-3.0/strings/en-GB.strings').read().split('\n') if '=' in l]
 ttk2_strings = [l.strip().replace(r'\n', '\n') for l in open(
     'ttk2_reddit_civcraft_1k.phrases').read().split('\n') if l.strip()]
 
@@ -28,6 +23,21 @@ def register_cmd(name, args=None, desc=None, hidden=False):
     def decorate(func):
         commands[name] = Command(func, name, args, desc, hidden)
         return func
+    return decorate
+
+
+def restrict_cmd_to_roles(*allowed_roles):
+    def decorate(func):
+        async def wrapper(state, message, *args, **kwargs):
+            for role in message.author.roles:
+                if role.name in allowed_roles:
+                    return await func(state, message, *args, **kwargs)
+            else:
+                await respond_on_react(
+                    state, message, emojis.no_entry_sign,
+                    'Not authenticated. You need one of these roles: '
+                    + ', '.join(allowed_roles))
+        return wrapper
     return decorate
 
 
@@ -61,21 +71,39 @@ async def cmd_help(state, message, cmd_name=None, *args):
 
 
 @register_cmd('reload', desc='reload commands', hidden=True)
+@restrict_cmd_to_roles('Voice of ttk2')
 async def cmd_reload(state, message, *args):
-    if message.author.id != admin_user_id:
-        await message.channel.send('Not authenticated')
+    try:
+        reload(sys.modules[__name__])
+        sys.modules[__name__].init_state(state.client, state)
+        await respond_on_react(
+            state, message, emojis.checkmark,
+            'Successfully reloaded the commands module')
+    except Exception as e:
+        await respond_on_react(
+            state, message, emojis.no_entry_sign,
+            'Error while reloading: {}'.format(e))
+
+
+@register_cmd('delete', args='<userid> [count]', desc='delete all (or last `count`) messages by that user in this channel')
+@restrict_cmd_to_roles('Voice of ttk2')
+async def cmd_delete(state, message, userid_str, delete_count=None, *args):
+    if len(userid_str) != 21:
+        await respond_on_react(
+            state, message, emojis.no_entry_sign,
+            'Invalid userid {}, use a player mention: <@{}>'
+            .format(userid_str, state.client.user.id))
         return
-    reload(sys.modules[__name__])
-    sys.modules[__name__].init_state(state.client, state)
-
-
-@register_cmd('test', hidden=True)
-async def cmd_test(state, message, *args):
-    if message.author.id != admin_user_id:
-        await message.channel.send('Not authenticated')
-        return
-
-    pass
+    userid = int(userid_str[2:-1])  # <@123456789012345678>
+    with message.channel.typing():
+        n_deleted = 0
+        async for msg in message.channel.history(limit=None):
+            if msg.author.id == userid:
+                await msg.delete()
+                n_deleted += 1
+                if delete_count and n_deleted >= int(delete_count):
+                    break
+        await message.channel.send('Deleted {} messages by <@{}>'.format(n_deleted, userid))
 
 
 @register_cmd('react', args='<emoji> [emoji...]', desc='react with all these emoji')
@@ -97,11 +125,15 @@ async def cmd_sleep(state, message, *args):
 
 
 @register_cmd('reworld', desc='recreate world from scratch')
+@restrict_cmd_to_roles('Voice of ttk2')
 async def cmd_reworld(state, message, *args):
     await message.add_reaction(emojis.hourglass_flowing_sand)
     state.world = world.create_new()
     await message.add_reaction(emojis.checkmark)
     await message.remove_reaction(emojis.hourglass_flowing_sand, state.client.user)
+    await respond_on_react(
+        state, message, emojis.checkmark,
+        'Successfully recreated the world')
 
 
 @register_cmd('hi', desc='join game')
@@ -199,7 +231,6 @@ async def handle_message(state, message):
             await message.add_reaction(emojis.no_entry_sign)
             raise e
     else:
-        await message.add_reaction(emojis.question_mark)
         await respond_on_react(
             state, message, emojis.question_mark,
             'No such command `{state.prefix}{cmd_name}`, try `{state.prefix}help`'.format(**locals()))
@@ -213,9 +244,12 @@ async def handle_member_join(state, member):
     pass
 
 
-async def respond_on_react(state, message, emoji, response):
+async def respond_on_react(state, message, emoji, response, restrict_to_user=False):
+    await message.add_reaction(emoji)
+
     def check(reaction, user):
-        return user == message.author and str(reaction.emoji) == emoji
+        return (not restrict_to_user or user == message.author) \
+            and str(reaction.emoji) == emoji
 
     try:
         reaction, user = await state.client.wait_for(
