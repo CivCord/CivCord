@@ -34,10 +34,15 @@ class MyClient(discord.Client):
 def main():
     import os
     import sys
-    token = os.getenv('DISCORD_TOKEN')
+    token = ''
+    if len(sys.argv) > 1:
+        token = sys.argv[1]
+        print('using token', token)
     if not token:
-        print('No token supplied, set DISCORD_TOKEN env.var.', file=sys.stderr)
-        sys.exit(1)
+        token = os.getenv('DISCORD_TOKEN')
+        if not token:
+            print('No token supplied, set DISCORD_TOKEN env.var.', file=sys.stderr)
+            sys.exit(1)
     client = MyClient()
     client.run(token)
 
